@@ -1,0 +1,117 @@
+\documentclass[11pt, a4paper]{article}
+
+%\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{type1ec}
+\hyphenation{methodo-logy}
+\sloppy
+
+\usepackage[portuguese,
+  bookmarks=true,
+  bookmarksnumbered=true,
+  linktocpage,
+  colorlinks,
+  citecolor=black,
+  urlcolor=black,
+  linkcolor=black,
+  filecolor=black,
+  ]{hyperref}
+
+% \usepackage[square]{natbib} %para usar citep
+
+\pagenumbering{gobble}% Remove page numbers (and reset to 1)
+\clearpage
+
+\setlength{\parindent}{25pt}
+\setlength{\parskip}{5pt plus4mm minus3mm}
+
+\usepackage{enumitem}
+%\setlist{nolistsep} % or \setlist{noitemsep} to leave space around whole list
+\setitemize{noitemsep,topsep=3pt,parsep=5pt,partopsep=3pt}
+
+\usepackage{listings}
+\usepackage{color}
+\usepackage{caption}
+\usepackage{algorithm}
+
+\newcommand{\eg}{\emph{e.g.,}\xspace}
+\newcommand{\ie}{\emph{i.e.,}\xspace}
+\newcommand{\etal}{\emph{et al.}\xspace}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  breakatwhitespace=false,
+  breaklines=true,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true
+  tabsize=3
+}
+
+%\renewcommand{\lstlistingname}{Listagem} %Traduz o nome Listing
+
+\usepackage{lipsum,tabularx}
+
+%\usepackage{titlesec}
+%\titleformat*{\section}{\Large\bfseries}
+%\titleformat*{\subsection}{\Large\bfseries}
+
+\usepackage{graphicx}
+
+\usepackage{multirow}
+
+\usepackage[square]{natbib}
+
+\begin{document}
+
+\include{title}
+
+\section{Introduction} % 1 página
+
+Libraries provide interfaces to software components created to be reused by multiple client applications: the \emph{Application Programming Interfaces (APIs)}~\citep{reddy2011api,apiDef}.
+%Figure~\ref{fig:definition} illustrates this definition.
+To expose services meant to be stable, they use visibility modifiers. 
+In Java, for instance, APIs use \texttt{public} and \texttt{protected} modifiers.
+As a result, API elements (\ie types, fields, and methods) provide contracts on which clients (either external or internal) rely on, accessing services and avoiding re-work.
+
+
+
+\section{Related Work} % 3 páginas
+\label{sec:literatura}
+
+
+
+
+\section{Research Proposal} % 2,5 páginas
+\label{sec:proposta}
+
+
+\section{Research Schedule} % 1 página
+\label{sec:cronograma}
+
+
+\section{Final Remarks} % 0,5 página
+\label{sec:conclusao}
+
+
+
+
+% Referências : 1 página
+\bibliography{bibfile}
+\bibliographystyle{apalike}
+
+\end{document}
