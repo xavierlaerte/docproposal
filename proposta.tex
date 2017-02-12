@@ -27,6 +27,7 @@
 \setlength{\parskip}{5pt plus4mm minus3mm}
 
 \usepackage{enumitem}
+\usepackage{xspace}
 %\setlist{nolistsep} % or \setlist{noitemsep} to leave space around whole list
 \setitemize{noitemsep,topsep=3pt,parsep=5pt,partopsep=3pt}
 
@@ -80,33 +81,271 @@
 
 \include{title}
 
-\section{Introduction} % 1 página
+\section{Introduction} 
 
 Libraries provide interfaces to software components created to be reused by multiple client applications: the \emph{Application Programming Interfaces (APIs)}~\citep{reddy2011api,apiDef}.
-%Figure~\ref{fig:definition} illustrates this definition.
-To expose services meant to be stable, they use visibility modifiers. 
-In Java, for instance, APIs use \texttt{public} and \texttt{protected} modifiers.
-As a result, API elements (\ie types, fields, and methods) provide contracts on which clients (either external or internal) rely on, accessing services and avoiding re-work.
+Its usage in software development is increasing significantly due to the advantages they bring in terms of quality and productivity~\citep{Kons09,Mose96}.
+For instance, by reusing API services, clients may benefit from the quality of components developed by experts and tested by a number of other applications.
+They may also save time and budget by avoiding the effort of developing services already available.
+Furthermore, applications may take advantage from the constant updates, when non-functional requirements are improved, such as safety and performance.
+
+As any other software system, during their life cycle, libraries are also subjected to evolutionary changes, such as addition, removal, or modification of their API elements.
+Changes are usually necessary to fix critical bugs, improve performance, decrease technical debt, and release new features~\citep{thung16}.
+Ideally, they should keep \emph{backward compatibility}, \ie do not break contracts with client applications.
+
+However, breaking contracts is a common practice: previous studies indicate that APIs are usually \emph{backward incompatible}~\citep{Wu10,Robb12,Hora15a,Brito16}.
+Thus, migrating between versions requires extra effort, once that clients will be forced to update their code and accommodate the novelties.
+Actually, in most cases clients remain hesitant to evolve and tend to delay API migration, keeping obsolete, and probably faulty, code~\citep{McDo13}.
+
+In this context, API changes are classified into \textit{breaking changes} and \textit{non-breaking changes}~\citep{dig}, as follows:  
+
+\begin{itemize} 
+	\item \emph{Breaking changes.} Changes that break backward compatibility through remotion or modification of API elements. 
+	As a consequence, clients may face compilation errors or behavioral changes after updating. 
+	
+	\item \emph{Non-breaking changes.} Changes that preserve compatibility and usually involve addition of new functionalities to the library. 
+	Thus, migrating between API versions including only non-breaking changes does not cause negative effects. 
+\end{itemize} 
+
+With the purpose of investigating the frequency, the impact and the motivations of API breaking changes, we performed three main studies during my Master course.
+%n such works, we studied a set of questions regarding API breaking changes.
+First, we analyzed 
+(i) the frequency of API breaking changes, 
+(ii) the behavior of these changes over time, 
+(iii) the impact on client applications, and 
+(iv) the characteristics of libraries with high frequency of breaking changes~\citep{vem2017, Saner2017}.
+Lastly, we elicited a list of motivations for API breaking changes based on a survey with library developers, and also verified whether they are aware about the impact on client applications~\citep{era2017}. 
+
+This research project aims to propose the extension of these previous works, elaborating methodologies and techniques that may assist both API developers and clients to mitigate the impact of breaking changes.
+To accomplish that, we intend to 
+(i) develop tools to calculate the impact of breaking changes before their release; 
+(ii) work on metrics to classify APIs as \emph{stable} or \emph{unstable}; and
+(iii) analyze the cost for clients of migrating between versions. 
+
+\emph{The remaining of this project is organized as follows:}
+Section~\ref{sec:related} presents the state of the art about API evolution and breaking changes, by discussing related work.
+Section~\ref{sec:proposal} details the research planning for this project.
+In Section~\ref{sec:schedule}, we define macro activities and main goals, scheduling them along the Ph.D. course.
+Finally, Section~\ref{sec:final} describes further information about this project and its author.
+
+\section{Related Work} 
+\label{sec:related}
+
+API evolution and stability have been largely studied in the literature.
+%Many approaches were proposed to support this activity and reduce its costs for client applications. 
+For instance, \cite{dig} advance the understanding of API changes, providing basis for designing migration tools.
+They defined a catalog of \emph{breaking changes} and \emph{non-breaking changes}, and manually analyzed libraries change log and release notes to identify the reasons of breaking changes.
+As a result, they found that $80$\% of the changes that break client systems are refactorings.
+We applied this catalog in our previous studies with the purpose of investigating the frequency of breaking changes between API versions.
+
+\cite{van12} present four stability metrics based on method changes and removals. 
+The authors investigated their metrics behavior by performing a historical analysis of stability and impact on 140 clients of the Apache Commons Library.
+However, they focused on clients history, observing the usage frequency and updates in their Maven build files.
+Also, their small scale case study was limited to \emph{one} library and their few clients, limiting the conclusions obtained to a instantiation of the metrics presented.
+%By contrast, in this work, we study the evolution of a larger set of libraries and compute the impact of breaking changes in an ultra-large dataset of client applications.
+%Additionally, we identify a set of characteristics related to development and social coding that are associated with API breaking changes.
+
+\cite{jezek15} performed an empirical study on Java APIs with the purpose of analyzing compatibility of API changes as libraries evolve and the impact on client programs.
+They use a dataset of 109 Java programs and 564 program versions, concluding that API instability is a common phenomenon. 
+Additionally, the authors observe that only in a few cases such instability affect API clients.
+%Their results are similar to those presented in our previous works regarding stability and impact on clients.
+%However, we conducted an experiment with a larger set of libraries (317) and versions (9K); besides, we investigated the characteristics of libraries with high and low frequency of breaking changes, and also the motivations behind them.
+%Therefore, we observe that the results previously discussed are in congruence with the claims stated by the authors for stability and impact aspects.
+%Essentially, our results are similar to the one presented in this paper regarding stability and impact on clients.
+
+In the Android context, \cite{McDo13} used a small-scale Android ecosystem to investigate API stability and adoption.
+The authors state that Android APIs evolve faster than clients migrate to newer versions.
+\cite{linares14} analyzed how the number of questions in StackOverflow increases when API changes.
+Results suggest that Android developers are more active when they face API modifications.
+
+%===================================%
+
+As a main strategy to reduce costs of breaking changes, some studies focus on the use of {\tt deprecated} annotations.
+For instance, \cite{Robb12} show that some API deprecation have large impact on the Smalltalk ecosystem and that replacement messages usually have low quality.
+\cite{Hora15a} analyze the impact of API replacement and improvement messages on a large-scale Smalltalk ecosystem.
+The results show that a large amount of clients are affected by API changes but most of them do not react to them. 
+In a recent work, \cite{Brito16} investigate the usage of deprecation messages and provide the basis for a recommendation tool.
+
+%To support client applications migrating between API versions, a plenty of tools and techniques were also proposed. 
+%\cite{Kim07}, for instance, propose a solution to automatically infer rules from structural changes, computed from modifications on method signatures.
+%As an improvement, \cite{Kim09a} propose LSDiff with the goal of computing differences between two versions of one library. 
+%\cite{King96} propose an approach that allows API developers to annotate changed methods with rules to update client systems.
+%\cite{Henk05} present CatchUp, a tool to capture and replay refactorings related to API evolution.
+%\cite{Nguy10b} propose a tool, called LibSync, that uses graph-based techniques to support developers migrating between framework versions.
+
+%===================================%
+
+\cite{thung16} perform a general-purpose case study to understand how developers reason and apply changes in three software ecosystems: Eclipse, R/CRAN, and Node.js/npm. 
+As a result, they report the differences in practice, polices, and tools applied when performing/avoiding a breaking change.
+They observe that in Eclipse developers do not break APIs; in R/CRAN, they reach out affected clients; and in Node.js/npm, they increase the major version number.
+However, the conclusions stated by the authors do not reflect developers explanations about concrete API breaking changes. 
+Instead, they reflect general perceptions and views about breaking changes in the considered software ecosystems.
+%By contrast, we base our analysis on reasons for concrete breaking changes collected in a period close to the survey.
+
+Finally, we observe that all studies previously presented have important limitations: they base their conclusion above small scale experiments and, in most cases, they do not investigate the real impact of such changes.
+Additionally, none of them analyze project characteristics neither the real motivations that drove developers to break contracts with client applications.
+In this context, we performed two main studies in the field: 
+(i) an historical and impact large-scale analysis (Section~\ref{subsec:saner}), and
+(ii) a survey with real world API developers (Section~\ref{subsec:era}).
+
+\subsection{Historical and Impact Study}
+\label{subsec:saner}
+
+With the purpose of measuring the amount of breaking changes on real world libraries and its impact on clients, we conducted a large-scale study with the top \emph{317} Java libraries on GitHub.
+We selected popular and mature repositories by filtering characteristics such as \emph{number of star}, \emph{number of releases}, and \emph{age}.
+Thus, our dataset is composed by libraries that, on the median, have 1,792 stars, 15 releases, and 3.4 years.
+Next, we present each research question studied, and their respective findings and conclusions:
+
+\vspace{0.2cm}
+
+\noindent\emph{RQ1. What is the frequency of API breaking changes?} 
+Libraries often break backward compatibility.
+We show that 27.99\% of all API changes break backward compatibility.
+On the median, the percentage of breaking changes per library hits 14.78\%.
+%Based on these results, we conclude that API evolution may increase the cost of clients update.
+In this context, we observe that API breaking changes are recurrent and occur in a relevant percentage.
+This may occur due to several reasons, for example, 
+(i) unawareness of breaking change risks,
+(ii) development by naive or less experienced programmers, or
+(iii) need to restructure the library and, consequently, change the API elements.
+Therefore, we concluded the need for further investigation on reasons developers break contracts with client applications (see Section~\ref{subsec:era}). % and, as a consequence, the development of techniques to mitigate the number of breaking changes. 
+
+\vspace{0.2cm}
+
+\noindent\emph{RQ2. How do API breaking changes evolve over time?} 
+Breaking changes frequency increases over time.
+Our study shows that the percentage of breaking changes tends to increase over time by a rate of 20\% when comparing their first and fifth years (from 29.02\% to 49.14\%). 
+This result shows that as time passes, libraries do not become more reliable and stable, as expected.
+Thus, we suggest the adoption of historical analysis by library developers to measure library stability; this is also important to pressure these developers to avoid compatibility faults.
+This analysis would also provide useful information for client developers when reasoning whether to depend or not on a library. 
+
+%Therefore, we suggest the historical analysis extended with the purpose of plotting a curve of breaking changes along the whole life cycle of a library.
+%Therefore, we may this visualization may support the analysis of its stability, providing useful information for clients when reasoning whether to depend on such library. 
+%Moreover, it may be important to pressure developers to avoid compatibility faults.
+\vspace{0.2cm}
+
+\noindent\emph{RQ3. What is the impact of API breaking changes in client applications?} 
+Most breaking changes do not have a massive impact on clients.
+Despite the high number of verified breaking changes, we observe that, on the median, only 2.54\% of clients are potentially impacted.
+This low percentage may indicate that 
+(i) library developers pay especial attention on the usage of types before breaking contracts or 
+(ii) the changed types are for internal usage, \ie not intended to be used by client applications.  
+However, the ratio of impacted clients increases to 13\% in a quarter of the studied libraries.
+Moreover, the analysis of outlier values showed that this impact can be very large, reaching 100\% of clients in some cases.
+Based on that, an impact analysis tool can be helpful for library developers to support their decisions before changing highly used APIs.
+%These techniques may take advantage of impact analysis to measure the cost of updating.
+%For that, we may analyze the usage of changed elements in client code and warn about the risks of update. 
+
+\vspace{0.2cm}
+
+%Andre: Falta revisar
+\noindent\emph{RQ4. What are the characteristics of libraries with high and low frequency of breaking changes?}
+Development and social coding measures are associated with API breaking changes. 
+We show that libraries with higher frequency of breaking changes have specific project characteristics.
+We found statistically significant higher values for the following metrics: \emph{number of watchers}, \emph{number of API elements}, \emph{number of contributors}, \emph{average API elements per contributor}, \emph{number of commits} and \emph{number of releases}.
+%We notice that API development and social coding measures is associated with the number of breaking changes.
+Thus, libraries with higher frequency of breaking changes are larger, more popular, and more active.
+Moreover, relative measures on the workload of API elements per contributor is also associated with high frequency of breaking changes: the more API elements a contributor has to maintain, the more unstable is likely to be the library.
+Thus, we suggest the usage of relative development metrics (such as \emph{average API elements per contributor}) as a proxy to developers assess the ``health'' of their libraries.
+
+\subsection{Survey with API Developers}
+\label{subsec:era}
+
+To understand the motivations that drive API developers to introduce breaking changes, we performed a qualitative case study with main contributors of libraries with more than \emph{50 breaking changes} observed in our previous study (see Section~\ref{subsec:saner}).
+From the initial dataset of 317 libraries, 90 filled this selection criterion, from which we retrieved 49 developers contact.
+Thus, we sent email for each of them, and received 14 answers (response rate of 28\%). 
+\emph{Seven} answers were selected for analysis.
+Next, we detail each research question studied, and their respective findings and conclusions: 
+
+\vspace{0.2cm}
+
+\noindent\emph{RQ1. Why do developers break API contracts?}
+We elicit a list of \emph{five} specific reasons pointed by developers as motivation for API breaking changes: \textsc{Library Simplification}, \textsc{Refactoring}, \textsc{Bug Fix}, \textsc{Dependency Changes}, and \textsc{Project Policy}.
+Some of them were recurrent between respondents.
+For instance, \textsc{Library Simplification} was discussed in three out of seven analyzed answers.
+This may reveal that developers are more concerned about the usability of their APIs, despite the possible costs caused by breaking changes.
+
+\vspace{0.2cm}
+
+\noindent\emph{RQ2. Are developers aware of the impact of breaking changes on client applications?}
+Our study shows that \emph{all} developers are aware of the risks attached to breaking contracts with clients.
+However, in most of the cases, they highlighted the adoption of alternatives to mitigate them.
+This result suggests that developers have conscious about the costs for client applications but rather than planning changes and deprecating elements, they prefer adopting strategies to alleviate their side-effects.
+
+\section{Research Planning} 
+\label{sec:proposal}
+
+Based on the results obtained in our previous studies (Sections~\ref{subsec:saner} and~\ref{subsec:era}), we observe the necessity of developing  techniques to assist both API developers and clients to deal with breaking changes and mitigate their impact.
+The goal of this research project is to extend these observations, by using them as basis to our future work.
+Also, we intend to develop tools that may apply these techniques in real world scenarios, improving API evolution and generating important feedback from their users.
+
+Historical analysis (\ie information retrieved from releases history)  may be adopted to measure library stability and pressure developers to avoid compatibility faults.
+Thus, an historical curve may be plotted with the rates of breaking changes along libraries life cycle, revealing how stable it is, and highlighting for developers the necessity of taking especial attention.
+Also, this analysis would provide useful information for client developers when reasoning whether to depend or not on a library. 
+
+Finally, techniques applying impact analysis can also be helpful for library developers to support their decisions before changing highly used APIs.
+In this case, we may use information provided by JAVALI\footnote{A tool to measure popularity of Java libraries, available at:~\url{http://java.labsoft.dcc.ufmg.br/javali}} to calculate the impact of breaking changes in specific API elements.
+Thus, before performing such changes, developers may analyze the size of its impact and then decide whether to perform it or not.
+
+\section{Research Schedule} 
+\label{sec:schedule}
+
+We organize the schedule of this project into three main phases: \emph{Qualification Exams}, \emph{Research Activities}, and \emph{Conclusion}.
+Table~\ref{tab:schedule} details each of these phases, as well as their respective activities.
+First, in \emph{Qualification Exams} phase, our main focus will be studying for such tests and filling the number of required credits by getting enrolled in courses offered by DCC.
+We assume that our 20 credits from the master course will be validated and reused, as well as the course "Estágio em Docência I".
+Thus, during this initial phase, 16 credits and "Estágio em Docência II" will be coursed.
+Next, in \emph{Research Activities} phase, we plan to perform a literature review, develop our thesis project, conduct research experiments, and participate in a foreign stage.
+Finally, the last year (\emph{Conclusion} phase) will be dedicated to conclude this research and write the thesis.
+
+\begin{table}[H]
+	\centering
+	
+	\resizebox{0.9\linewidth}{!}{
+		
+		\begin{tabular}{|l|cc|ccccc|cc|}
+			\hline
+			\multicolumn{1}{|c|}{\multirow{2}{*}{\textbf{Activities}}} & \multicolumn{2}{c|}{\textbf{Exams}} & \multicolumn{5}{c|}{\textbf{Research Activities}}                                                                                            & \multicolumn{2}{c|}{\textbf{Conclusion}}               \\ \cline{2-10}
+			\multicolumn{1}{|c|}{}                                     & \textbf{17.2}       & \textbf{18.1}      & \textbf{18.2}            & \textbf{19.1}            & \textbf{19.2}            & \textbf{20.1}            & \textbf{20.2}    & \textbf{21.1}            & \textbf{21.2}            \\ \hline \hline
+			\textbf{Studying}                                      & $\times$             & $\times$            &                           &                           &                           &                           &                   &                           &                           \\ \hline
+			\textbf{Courses}                                       & $\times$             & $\times$            &                 &                           &                           &                           &                   &                           &                           \\ \hline
+			\textbf{Literature}                                        & \multirow{2}{*}{}    & \multirow{2}{*}{}   & \multirow{2}{*}{$\times$} & \multirow{2}{*}{$\times$} & \multirow{2}{*}{}         & \multirow{2}{*}{}         & \multirow{2}{*}{} & \multirow{2}{*}{}         & \multirow{2}{*}{}         \\
+			\textbf{Review}                                        &                      &                     &                           &                           &                           &                           &                   &                           &                           \\ \hline
+			\textbf{Thesis}                                           & \multirow{2}{*}{}    & \multirow{2}{*}{}   & \multirow{2}{*}{}         & \multirow{2}{*}{$\times$} & \multirow{2}{*}{$\times$} & \multirow{2}{*}{}         & \multirow{2}{*}{} & \multirow{2}{*}{}         & \multirow{2}{*}{}         \\
+			\textbf{Project}                                           &                      &                     &                           &                           &                           &                           &                   &                           &                           \\ \hline
+			\textbf{Researching}                                          &                      &                     &                           & $\times$                  & $\times$                  & $\times$                  & $\times$          & $\times$                  &                           \\ \hline
+			\textbf{Foreign}                                           & \multirow{2}{*}{}    & \multirow{2}{*}{}   & \multirow{2}{*}{}         & \multirow{2}{*}{}         & \multirow{2}{*}{}         & \multirow{2}{*}{$\times$} & \multirow{2}{*}{} & \multirow{2}{*}{}         & \multirow{2}{*}{}         \\
+			\textbf{Stage}                                       &                      &                     &                           &                           &                           &                           &                   &                           &                           \\ \hline
+			\textbf{Thesis}                                           & \multirow{2}{*}{}    & \multirow{2}{*}{}   & \multirow{2}{*}{}         & \multirow{2}{*}{}         & \multirow{2}{*}{}         & \multirow{2}{*}{}         & \multirow{2}{*}{} & \multirow{2}{*}{$\times$} & \multirow{2}{*}{$\times$} \\
+			\textbf{Writing}                                          &                      &                     &                           &                           &                           &                           &                   &                           &                           \\ \hline
+		\end{tabular}
+		
+	}
+	
+	\caption{Schedule of proposed activities}
+	\label{tab:schedule}
+\end{table}
 
 
+\section{Final Remarks} 
+\label{sec:final}
 
-\section{Related Work} % 3 páginas
-\label{sec:literatura}
+Currently I am a Master student in Computer Science at Federal University of Minas Gerais (UFMG), in the field of Software Engineering, prospecting to conclude in April, 2017.
+My master research consists in a large-scale study of API breaking changes, considering historical, impact, and qualitative analysis.
+This research resulted in \emph{three} published articles:
 
+\begin{itemize}
+	\item Xavier, L., Brito, A., Hora, A., and Valente, M. T. (2016). Um Estudo em Larga Escala sobre Estabilidade de APIs. In \textit{4th Brazilian Workshop on Software Visualization, Evolution and Maintenance (VEM)}, p. 1--8.
+	\item Xavier, L., Brito, A., Hora, A., and Valente, M. T. (2017). Historical and Impact Analysis of API Breaking Changes: A Large Scale Study. In \textit{24th International Conference on Software Analysis, Evolution and Reengineering (SANER)}, p. 1--10.
+	\item Xavier, L., Hora, A., and Valente, M. T. (2017). Why do We Break APIs? First Answers from Developers. In \textit{24th International Conference on Software Analysis, Evolution and Reengineering (SANER), Early Research Track}, p. 1--5.
+\end{itemize}
 
+We mainly observed that API developers often break contracts with client applications, and that this problem tends to increase over time.
+Therefore, we point out the necessity of developing techniques to mitigate API breaking changes by applying historical and impact analysis.
+The goal of these techniques is to better assist API developers during evolutionary activities, and to guide clients when assessing libraries to depend on.
 
-
-\section{Research Proposal} % 2,5 páginas
-\label{sec:proposta}
-
-
-\section{Research Schedule} % 1 página
-\label{sec:cronograma}
-
-
-\section{Final Remarks} % 0,5 página
-\label{sec:conclusao}
-
+Finally, I present my Ph.D. candidature with the purpose of extending this research line and its relevant results.
+Besides, I intend to be a full time student, as in my Master course, and so I highlight the necessity of a scholarship.
 
 
 
